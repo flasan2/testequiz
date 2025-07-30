@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -71,10 +72,52 @@
       gap: 10px;
       z-index: 5;
     }
+    #explosaoFogos {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0;
+      pointer-events: none;
+      width: 300px;
+      height: 300px;
+      z-index: 9;
+    }
+    #explosaoFogos.ativo {
+      animation: explode 6s ease-out forwards;
+    }
+    @keyframes explode {
+      0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+      20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    }
+    .efeitoTela {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      z-index: 1;
+    }
+    .efeitoTela.ativo { opacity: 1; }
+    .efeitoTela.chuva {
+      background-image: url('chuva.png');
+      background-size: cover;
+      background-repeat: repeat;
+      background-position: 0 0;
+      animation: chuvaAnim 6s linear infinite;
+    }
+    @keyframes chuvaAnim {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 100%; }
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
+  <img src="fogos.png" id="explosaoFogos" alt="Fogos">
+  <div id="efeitoTela" class="efeitoTela"></div>
+
   <div class="top-buttons">
     <button id="btnDownload" class="btn" title="Baixar participantes">&#x2B07;</button>
     <button id="btnLimpar" class="btn" title="Limpar dados">&#x2716;</button>
@@ -115,6 +158,9 @@
     let dadosPessoa = {};
     let perguntaAtual = null;
 
+    const efeitoTela = document.getElementById('efeitoTela');
+    const fogos = document.getElementById('explosaoFogos');
+
     document.getElementById('importXLSX').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -138,7 +184,14 @@
       reader.readAsArrayBuffer(file);
     });
 
+    
     document.getElementById('btnIniciar').addEventListener('click', () => {
+      // carrega perguntas uma única vez se já estiverem salvas
+      const local = localStorage.getItem('quizQuestions');
+      if (!perguntas.length && local) {
+        perguntas = JSON.parse(local);
+      }
+
       perguntas = JSON.parse(localStorage.getItem('quizQuestions') || '[]');
       if (!perguntas.length) {
         alert('Nenhuma pergunta carregada.');
@@ -189,6 +242,17 @@
       [...document.getElementById('optionsList').children]
         .forEach(li => li.removeEventListener('click', onOptionClick));
       registraResultado(selecionada, correta, acertou);
+      ativaEfeito(acertou ? 'fogos' : 'chuva');
+    }
+
+    function ativaEfeito(tipo) {
+      if (tipo === 'fogos') {
+        fogos.classList.add('ativo');
+        setTimeout(() => fogos.classList.remove('ativo'), 6000);
+      } else if (tipo === 'chuva') {
+        efeitoTela.className = 'efeitoTela chuva ativo';
+        setTimeout(() => efeitoTela.classList.remove('ativo'), 6000);
+      }
     }
 
     function registraResultado(marcada, correta, acertou) {
