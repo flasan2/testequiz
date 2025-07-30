@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Quiz</title>
+  <title>Quiz Grupo Garbo</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -63,7 +63,6 @@
       text-align: center;
     }
     #btnVoltar { margin-top: 20px; }
-
     .top-buttons {
       position: absolute;
       top: 10px;
@@ -72,62 +71,22 @@
       gap: 10px;
       z-index: 5;
     }
-
-    #explosaoFogos {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%) scale(0);
-      opacity: 0;
-      pointer-events: none;
-      width: 300px;
-      height: 300px;
-      z-index: 9;
-    }
-    #explosaoFogos.ativo {
-      animation: explode 6s ease-out forwards;
-    }
-    @keyframes explode {
-      0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
-      20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-      100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-    }
-
-    .efeitoTela {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.4s ease;
-      z-index: 1;
-    }
-    .efeitoTela.ativo { opacity: 1; }
-    .efeitoTela.chuva {
-      background-image: url('chuva.png');
-      background-size: cover;
-      background-repeat: repeat;
-      background-position: 0 0;
-      animation: chuvaAnim 6s linear infinite;
-    }
-    @keyframes chuvaAnim {
-      0% { background-position: 0 0; }
-      100% { background-position: 0 100%; }
-    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-  <img src="fogos.png" id="explosaoFogos" alt="Fogos">
-  <div id="efeitoTela" class="efeitoTela"></div>
-
   <div class="top-buttons">
-    <button id="btnDownload" class="btn" title="Baixar planilha">&#x2B07;</button>
+    <button id="btnDownload" class="btn" title="Baixar participantes">&#x2B07;</button>
     <button id="btnLimpar" class="btn" title="Limpar dados">&#x2716;</button>
   </div>
 
   <div class="container">
     <h1>GRUPO GARBO</h1>
     <div id="formIdentificacao">
+      <div class="input-group">
+        <label>Importar perguntas (.xlsx):</label>
+        <input type="file" id="importXLSX" accept=".xlsx">
+      </div>
       <div class="input-group">
         <label>Nome:</label>
         <input type="text" id="nome" required>
@@ -152,27 +111,39 @@
   </div>
 
   <script>
-    const perguntas = JSON.parse(localStorage.getItem('quizQuestions') || '[]');
-    if (!perguntas.length) {
-      alert('Nenhuma pergunta cadastrada.');
-      history.back();
-    }
-
-    const form = document.getElementById('formIdentificacao');
-    const tela = document.getElementById('telaPergunta');
-    const perguntaTexto = document.getElementById('perguntaTexto');
-    const optionsList = document.getElementById('optionsList');
-    const msgResultado = document.getElementById('msgResultado');
-    const btnVoltar = document.getElementById('btnVoltar');
-    const btnDownload = document.getElementById('btnDownload');
-    const btnLimpar = document.getElementById('btnLimpar');
-    const efeitoTela = document.getElementById('efeitoTela');
-    const fogos = document.getElementById('explosaoFogos');
-
+    let perguntas = [];
     let dadosPessoa = {};
     let perguntaAtual = null;
 
+    document.getElementById('importXLSX').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet);
+        perguntas = json.map(row => ({
+          p: row["Pergunta"],
+          A: row["Alternativa A"],
+          B: row["Alternativa B"],
+          C: row["Alternativa C"],
+          D: row["Alternativa D"],
+          correta: row["Correta"]?.toUpperCase().trim()
+        }));
+        localStorage.setItem('quizQuestions', JSON.stringify(perguntas));
+        alert('Perguntas carregadas com sucesso!');
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
     document.getElementById('btnIniciar').addEventListener('click', () => {
+      perguntas = JSON.parse(localStorage.getItem('quizQuestions') || '[]');
+      if (!perguntas.length) {
+        alert('Nenhuma pergunta carregada.');
+        return;
+      }
       const nome = document.getElementById('nome').value.trim();
       const setor = document.getElementById('setor').value.trim();
       const cidade = document.getElementById('cidade').value.trim();
@@ -181,15 +152,16 @@
         return;
       }
       dadosPessoa = { nome, setor, cidade };
-      form.style.display = 'none';
-      tela.style.display = 'block';
+      document.getElementById('formIdentificacao').style.display = 'none';
+      document.getElementById('telaPergunta').style.display = 'block';
       sorteiaPergunta();
     });
 
     function sorteiaPergunta() {
       perguntaAtual = perguntas[Math.floor(Math.random() * perguntas.length)];
-      perguntaTexto.textContent = perguntaAtual.p;
+      document.getElementById('perguntaTexto').textContent = perguntaAtual.p;
       const letras = ['A', 'B', 'C', 'D'].sort(() => Math.random() - 0.5);
+      const optionsList = document.getElementById('optionsList');
       optionsList.innerHTML = '';
       letras.forEach(letra => {
         const li = document.createElement('li');
@@ -206,21 +178,18 @@
       const acertou = selecionada === correta;
       e.currentTarget.classList.add(acertou ? 'correct' : 'wrong');
       if (!acertou) {
-        const corretaLi = [...optionsList.children].find(li => li.dataset.letra === correta);
+        const corretaLi = [...document.getElementById('optionsList').children]
+          .find(li => li.dataset.letra === correta);
         if (corretaLi) corretaLi.classList.add('correct');
       }
-      registraResultado(selecionada, correta, acertou);
-      msgResultado.textContent = acertou
+      document.getElementById('msgResultado').textContent = acertou
         ? `Parabéns, ${dadosPessoa.nome}! Você pode rodar a roleta.`
         : `Não foi dessa vez, ${dadosPessoa.nome}.`;
-      btnVoltar.style.display = 'block';
-      [...optionsList.children].forEach(li => li.removeEventListener('click', onOptionClick));
-      ativaEfeito(acertou ? 'fogos' : 'chuva');
+      document.getElementById('btnVoltar').style.display = 'block';
+      [...document.getElementById('optionsList').children]
+        .forEach(li => li.removeEventListener('click', onOptionClick));
+      registraResultado(selecionada, correta, acertou);
     }
-
-    btnVoltar.addEventListener('click', () => {
-      window.location.reload();
-    });
 
     function registraResultado(marcada, correta, acertou) {
       const agora = new Date();
@@ -240,7 +209,7 @@
       localStorage.setItem('respostasQuiz', JSON.stringify(registros));
     }
 
-    btnDownload.addEventListener('click', () => {
+    document.getElementById('btnDownload').addEventListener('click', () => {
       const registros = JSON.parse(localStorage.getItem('respostasQuiz') || '[]');
       if (!registros.length) {
         alert('Nenhum participante registrado.');
@@ -252,22 +221,16 @@
       XLSX.writeFile(workbook, 'quiz-participantes.xlsx');
     });
 
-    btnLimpar.addEventListener('click', () => {
-      const confirmar = confirm('Tem certeza que deseja limpar todos os dados salvos da planilha?');
+    document.getElementById('btnLimpar').addEventListener('click', () => {
+      const confirmar = confirm('Tem certeza que deseja apagar todos os dados?');
       if (!confirmar) return;
       localStorage.removeItem('respostasQuiz');
       alert('Dados apagados com sucesso.');
     });
 
-    function ativaEfeito(tipo) {
-      if (tipo === 'fogos') {
-        fogos.classList.add('ativo');
-        setTimeout(() => fogos.classList.remove('ativo'), 6000);
-      } else if (tipo === 'chuva') {
-        efeitoTela.className = 'efeitoTela chuva ativo';
-        setTimeout(() => efeitoTela.classList.remove('ativo'), 6000);
-      }
-    }
+    document.getElementById('btnVoltar').addEventListener('click', () => {
+      window.location.reload();
+    });
   </script>
 </body>
 </html>
