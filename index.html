@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width:100vw; height:100vh; font-family: sans-serif;
+      background: #262e91; color: #fff;
+    }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .container {
+      background: #1a2160;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90vw; max-width: 600px;
+      display: flex; flex-direction: column;
+      position: relative;
+      z-index: 2;
+    }
+    h1 {
+      background: #9bd438; color: #000;
+      padding: 15px; text-align: center;
+      border-radius: 8px; margin-bottom: 20px;
+      font-size: 1.5em;
+    }
+    .input-group { margin-bottom: 10px; }
+    .input-group label { display: block; margin-bottom: 5px; }
+    .input-group input {
+      width: 100%; padding: 8px;
+      border-radius: 6px; border: 2px solid #9bd438;
+    }
+    .btn {
+      padding: 12px; font-size: 1em;
+      border: none; border-radius: 8px;
+      background: #9bd438; color: #000;
+      cursor: pointer; margin-top: 15px;
+    }
+    .btn:hover { background: #b1e05e; }
+    #perguntaTexto {
+      font-size: 1.3em; margin-bottom: 20px;
+    }
+    .options {
+      list-style: none; padding: 0;
+    }
+    .options li {
+      background: rgba(155, 212, 56, 0.1);
+      margin: 8px 0; padding: 12px;
+      border: 2px solid #9bd438;
+      border-radius: 8px; cursor: pointer;
+      transition: 0.3s;
+    }
+    .correct { border-color: #0f0; background: rgba(0,255,0,0.2); }
+    .wrong { border-color: #f00; background: rgba(255,0,0,0.2); }
+    #msgResultado {
+      margin-top: 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+      text-align: center;
+    }
+    #btnVoltar { margin-top: 20px; }
+
+    .top-buttons {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 10px;
+      z-index: 5;
+    }
+
+    #explosaoFogos {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0;
+      pointer-events: none;
+      width: 300px;
+      height: 300px;
+      z-index: 9;
+    }
+    #explosaoFogos.ativo {
+      animation: explode 6s ease-out forwards;
+    }
+    @keyframes explode {
+      0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+      20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    }
+
+    .efeitoTela {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      z-index: 1;
+    }
+    .efeitoTela.ativo { opacity: 1; }
+    .efeitoTela.chuva {
+      background-image: url('chuva.png');
+      background-size: cover;
+      background-repeat: repeat;
+      background-position: 0 0;
+      animation: chuvaAnim 6s linear infinite;
+    }
+    @keyframes chuvaAnim {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 100%; }
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+  <img src="fogos.png" id="explosaoFogos" alt="Fogos">
+  <div id="efeitoTela" class="efeitoTela"></div>
+
+  <div class="top-buttons">
+    <button id="btnDownload" class="btn" title="Baixar planilha">&#x2B07;</button>
+    <button id="btnLimpar" class="btn" title="Limpar dados">&#x2716;</button>
+  </div>
+
+  <div class="container">
+    <h1>GRUPO GARBO</h1>
+    <div id="formIdentificacao">
+      <div class="input-group">
+        <label>Nome:</label>
+        <input type="text" id="nome" required>
+      </div>
+      <div class="input-group">
+        <label>Setor:</label>
+        <input type="text" id="setor" required>
+      </div>
+      <div class="input-group">
+        <label>Cidade:</label>
+        <input type="text" id="cidade" required>
+      </div>
+      <button id="btnIniciar" class="btn">Iniciar Quiz</button>
+    </div>
+
+    <div id="telaPergunta" style="display:none;">
+      <div id="perguntaTexto"></div>
+      <ul id="optionsList" class="options"></ul>
+      <div id="msgResultado"></div>
+      <button id="btnVoltar" class="btn" style="display:none;">Voltar</button>
+    </div>
+  </div>
+
+  <script>
+    const perguntas = JSON.parse(localStorage.getItem('quizQuestions') || '[]');
+    if (!perguntas.length) {
+      alert('Nenhuma pergunta cadastrada.');
+      history.back();
+    }
+
+    const form = document.getElementById('formIdentificacao');
+    const tela = document.getElementById('telaPergunta');
+    const perguntaTexto = document.getElementById('perguntaTexto');
+    const optionsList = document.getElementById('optionsList');
+    const msgResultado = document.getElementById('msgResultado');
+    const btnVoltar = document.getElementById('btnVoltar');
+    const btnDownload = document.getElementById('btnDownload');
+    const btnLimpar = document.getElementById('btnLimpar');
+    const efeitoTela = document.getElementById('efeitoTela');
+    const fogos = document.getElementById('explosaoFogos');
+
+    let dadosPessoa = {};
+    let perguntaAtual = null;
+
+    document.getElementById('btnIniciar').addEventListener('click', () => {
+      const nome = document.getElementById('nome').value.trim();
+      const setor = document.getElementById('setor').value.trim();
+      const cidade = document.getElementById('cidade').value.trim();
+      if (!nome || !setor || !cidade) {
+        alert('Preencha todos os campos.');
+        return;
+      }
+      dadosPessoa = { nome, setor, cidade };
+      form.style.display = 'none';
+      tela.style.display = 'block';
+      sorteiaPergunta();
+    });
+
+    function sorteiaPergunta() {
+      perguntaAtual = perguntas[Math.floor(Math.random() * perguntas.length)];
+      perguntaTexto.textContent = perguntaAtual.p;
+      const letras = ['A', 'B', 'C', 'D'].sort(() => Math.random() - 0.5);
+      optionsList.innerHTML = '';
+      letras.forEach(letra => {
+        const li = document.createElement('li');
+        li.textContent = `${letra}: ${perguntaAtual[letra]}`;
+        li.dataset.letra = letra;
+        li.addEventListener('click', onOptionClick);
+        optionsList.appendChild(li);
+      });
+    }
+
+    function onOptionClick(e) {
+      const selecionada = e.currentTarget.dataset.letra;
+      const correta = perguntaAtual.correta;
+      const acertou = selecionada === correta;
+      e.currentTarget.classList.add(acertou ? 'correct' : 'wrong');
+      if (!acertou) {
+        const corretaLi = [...optionsList.children].find(li => li.dataset.letra === correta);
+        if (corretaLi) corretaLi.classList.add('correct');
+      }
+      registraResultado(selecionada, correta, acertou);
+      msgResultado.textContent = acertou
+        ? `Parabéns, ${dadosPessoa.nome}! Você pode rodar a roleta.`
+        : `Não foi dessa vez, ${dadosPessoa.nome}.`;
+      btnVoltar.style.display = 'block';
+      [...optionsList.children].forEach(li => li.removeEventListener('click', onOptionClick));
+      ativaEfeito(acertou ? 'fogos' : 'chuva');
+    }
+
+    btnVoltar.addEventListener('click', () => {
+      window.location.reload();
+    });
+
+    function registraResultado(marcada, correta, acertou) {
+      const agora = new Date();
+      const registro = {
+        Nome: dadosPessoa.nome,
+        Setor: dadosPessoa.setor,
+        Cidade: dadosPessoa.cidade,
+        Pergunta: perguntaAtual.p,
+        'Alternativa Correta': correta,
+        'Alternativa Marcada': marcada,
+        Resultado: acertou ? 'Acertou' : 'Errou',
+        Data: agora.toLocaleDateString(),
+        Hora: agora.toLocaleTimeString()
+      };
+      let registros = JSON.parse(localStorage.getItem('respostasQuiz') || '[]');
+      registros.push(registro);
+      localStorage.setItem('respostasQuiz', JSON.stringify(registros));
+    }
+
+    btnDownload.addEventListener('click', () => {
+      const registros = JSON.parse(localStorage.getItem('respostasQuiz') || '[]');
+      if (!registros.length) {
+        alert('Nenhum participante registrado.');
+        return;
+      }
+      const worksheet = XLSX.utils.json_to_sheet(registros);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Participantes');
+      XLSX.writeFile(workbook, 'quiz-participantes.xlsx');
+    });
+
+    btnLimpar.addEventListener('click', () => {
+      const confirmar = confirm('Tem certeza que deseja limpar todos os dados salvos da planilha?');
+      if (!confirmar) return;
+      localStorage.removeItem('respostasQuiz');
+      alert('Dados apagados com sucesso.');
+    });
+
+    function ativaEfeito(tipo) {
+      if (tipo === 'fogos') {
+        fogos.classList.add('ativo');
+        setTimeout(() => fogos.classList.remove('ativo'), 6000);
+      } else if (tipo === 'chuva') {
+        efeitoTela.className = 'efeitoTela chuva ativo';
+        setTimeout(() => efeitoTela.classList.remove('ativo'), 6000);
+      }
+    }
+  </script>
+</body>
+</html>
