@@ -49,7 +49,23 @@
       list-style: none; padding: 0;
     }
     .options li {
-      background: rgba(155, 212, 56, 0.1);
+  background-color: #1a2160;
+  margin: 8px 0; padding: 12px;
+  border: 2px solid #9bd438;
+  border-radius: 8px; cursor: pointer;
+  transition: 0.3s;
+  color: #fff;
+}
+.options li.correct {
+  background-color: #4CAF50 !important;
+  border-color: #4CAF50 !important;
+  color: #fff !important;
+}
+.options li.wrong {
+  background-color: #F44336 !important;
+  border-color: #F44336 !important;
+  color: #fff !important;
+}
       margin: 8px 0; padding: 12px;
       border: 2px solid #9bd438;
       border-radius: 8px; cursor: pointer;
@@ -229,7 +245,13 @@
       const selecionada = e.currentTarget.dataset.letra;
       const correta = perguntaAtual.correta;
       const acertou = selecionada === correta;
-      e.currentTarget.classList.add(acertou ? 'correct' : 'wrong');
+      
+      if (acertou) {
+        e.currentTarget.classList.add('correct');
+      } else {
+        e.currentTarget.classList.add('wrong');
+      }
+    
       if (!acertou) {
         const corretaLi = [...document.getElementById('optionsList').children]
           .find(li => li.dataset.letra === correta);
