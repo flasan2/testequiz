@@ -2,114 +2,152 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Quiz Grupo Garbo</title>
   <style>
+    :root { --azul:#1e40ff; --verde:#9bd438; --txt:#fff; --radius:16px; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      width:100vw; height:100vh;
-      font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color:#fff;
-      background: linear-gradient(135deg, #000 0%, #9bd438 60%, #1e40ff 100%);
-    }
-    body { display:flex; align-items:center; justify-content:center; overflow:hidden; }
 
-    .container{
-      background: rgba(0,0,0,0.65);
-      backdrop-filter: blur(8px);
-      padding: 35px;
-      border-radius: 18px;
-      width: 90vw; max-width: 650px;
-      display:flex; flex-direction:column; align-items:center;
-      position:relative; z-index:2;
-      box-shadow: 0 0 25px rgba(155,212,56,0.35);
+    html, body {
+      width:100%; height:100%;
+      font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--txt);
+      background: linear-gradient(135deg, #000 0%, var(--verde) 60%, var(--azul) 100%);
+      overflow-x: hidden;
     }
+    body {
+      min-height: 100dvh;
+      padding: 20px;
+      display:flex; align-items:center; justify-content:center;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+    }
+
+    /* ===== Container com efeito vidro ===== */
+    .container{
+      background: rgba(20, 20, 20, 0.45);
+      backdrop-filter: blur(12px) saturate(160%);
+      -webkit-backdrop-filter: blur(12px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: var(--radius);
+      box-shadow: 0 0 25px rgba(155,212,56,0.25), inset 0 0 20px rgba(255,255,255,0.03);
+      padding: clamp(18px, 3.5vw, 30px);
+      width: min(96vw, 920px);
+      display:flex; flex-direction:column; align-items:center; text-align:center;
+      animation: fadeIn 0.6s ease;
+    }
+    @keyframes fadeIn { from{opacity:0; transform:scale(.97)} to{opacity:1; transform:scale(1)} }
 
     .logo{
-      width: 260px;
-      margin-bottom: 16px;
+      width: clamp(160px, 35vw, 240px);
+      margin-bottom: clamp(12px, 2.5vw, 16px);
       filter: drop-shadow(0 0 10px rgba(30,64,255,0.7));
-      display:block;
     }
-
     h1{
-      text-align:center;
-      font-size: 1.9em;
-      margin-bottom: 22px;
-      background: linear-gradient(90deg, #9bd438, #1e40ff);
+      font-size: clamp(1.2rem, 2.5vw + 0.8rem, 1.6rem);
+      margin-bottom: clamp(12px, 2.5vw, 20px);
+      background: linear-gradient(90deg, var(--verde), var(--azul));
       -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-      text-transform: uppercase; letter-spacing: 1.5px;
+      text-transform: uppercase; letter-spacing: 1.2px; font-weight:700;
     }
 
-    .input-group{ margin-bottom:12px; width:100%; }
-    .input-group label{ display:block; margin-bottom:6px; font-size:1.02em; opacity:.9; }
+    /* ===== Inputs largos + vidro ===== */
+    #formIdentificacao, #telaPergunta { width:100%; max-width: 820px; margin: 0 auto; }
+    .input-group{
+      width:95%; max-width:800px; margin: 0 auto clamp(12px,2.2vw,16px);
+      display:flex; flex-direction:column; text-align:left;
+    }
+    .input-group label{ margin-bottom:6px; font-size:clamp(.9rem,1.8vw,1rem); opacity:.85; }
     .input-group input{
-      width:100%; padding:10px; border-radius:10px;
-      border:2px solid #1e40ff;
-      background:#0d0d0d; color:#fff; font-size:1.02em;
+      width:100%; padding: clamp(12px,2vw,14px);
+      border-radius:12px; font-size:clamp(.95rem,1.8vw,1rem); color:#fff;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+      outline:none; transition: all .3s ease;
+    }
+    .input-group input:focus{
+      border-color: var(--verde);
+      box-shadow: 0 0 12px rgba(155,212,56,0.4), inset 0 0 6px rgba(155,212,56,0.2);
+      background: rgba(255,255,255,0.12);
     }
 
     .btn{
-      padding:14px; font-size:1.12em; font-weight:600;
-      border:none; border-radius:10px; width:100%;
-      background: linear-gradient(90deg, #9bd438, #1e40ff);
-      color:#fff; cursor:pointer; margin-top:18px; letter-spacing:1px;
-      transition:.25s ease; text-transform: uppercase;
+      width:95%; max-width:800px; margin: clamp(10px,2.5vw,16px) auto 0;
+      padding: clamp(12px,2vw,14px);
+      border:none; border-radius:10px; min-height:44px;
+      background: linear-gradient(90deg, var(--verde), var(--azul));
+      color:#fff; font-weight:600; font-size:clamp(.9rem,1.8vw,1rem);
+      text-transform:uppercase; letter-spacing:.8px; cursor:pointer;
+      transition:.3s ease; box-shadow: 0 4px 12px rgba(30,64,255,0.25);
     }
-    .btn:hover{ background: linear-gradient(90deg, #1e40ff, #9bd438); transform: scale(1.04); }
+    .btn:hover{ background: linear-gradient(90deg, var(--azul), var(--verde)); transform: translateY(-1px); }
 
-    #perguntaTexto{ font-size:1.28em; margin-bottom:20px; text-align:center; }
+    #perguntaTexto{ font-size:clamp(1rem,2.2vw,1.1rem); margin:clamp(12px,2.5vw,18px) 4px; line-height:1.4; }
 
-    .options{ list-style:none; padding:0; width:100%; }
+    .options{
+      list-style:none; padding:0; width:100%;
+      max-height: 46vh; overflow:auto; -webkit-overflow-scrolling:touch;
+      margin-bottom: clamp(10px,2vw,14px);
+    }
     .options li{
-      margin:10px 0; padding:14px; border-radius:10px; cursor:pointer;
+      margin: 8px 0; padding: clamp(10px,2.2vw,12px);
+      border-radius:10px; cursor:pointer;
       background: rgba(255,255,255,0.06);
-      border:2px solid #1e40ff;
-      transition:.25s ease; font-size:1.06em;
+      border:2px solid var(--azul);
+      transition:.2s ease; font-size:clamp(.92rem,1.8vw,.98rem);
+      min-height:44px; display:flex; align-items:center;
     }
     .options li:hover{ background: rgba(30,64,255,0.18); }
     .options li.correct{ background: rgba(0,255,0,0.25); border-color:#00ff7f; }
     .options li.wrong{ background: rgba(255,0,0,0.25); border-color:#ff4747; }
 
-    #msgResultado{ margin-top:20px; font-size:1.18em; font-weight:700; text-align:center; }
-    .top-buttons{ position:absolute; top:10px; right:10px; display:flex; gap:10px; z-index:5; width:140px; }
+    #msgResultado{ margin-top: clamp(10px,2vw,16px); font-size:clamp(.95rem,1.8vw,1rem); font-weight:600; min-height:1.2em; text-align:center; }
 
+    .top-buttons{ position:absolute; left:-56px; top: 120px; display:flex; gap:10px; z-index:5; flex-direction:column; }
+    .top-buttons .btn{ width:44px; min-width:44px; padding:10px; border-radius:10px; }
+
+    /* ===== Fogos refinados ===== */
     #explosaoFogos{
-      position:absolute; top:50%; left:50%;
-      transform: translate(-50%,-50%) scale(0); opacity:0; pointer-events:none;
-      width:300px; height:300px; z-index:9;
+      position: fixed; top:50%; left:50%;
+      transform: translate(-50%, -50%) scale(0); opacity:0; pointer-events:none;
+      width: clamp(120px, 30vw, 220px); height: clamp(120px, 30vw, 220px); z-index:5;
+      filter: drop-shadow(0 0 12px rgba(255,255,255,0.4)) blur(2px) saturate(130%);
+      transition: transform .3s ease, opacity .3s ease;
     }
-    #explosaoFogos.ativo{ animation: explode 6s ease-out forwards; }
-    @keyframes explode{
+    #explosaoFogos.ativo{ animation: fogosBoom 3.5s ease-out forwards; }
+    @keyframes fogosBoom{
       0%{ transform:translate(-50%,-50%) scale(.2); opacity:0; }
-      20%{ transform:translate(-50%,-50%) scale(1.2); opacity:1; }
+      20%{ transform:translate(-50%,-50%) scale(1); opacity:.9; }
+      60%{ transform:translate(-50%,-50%) scale(.9); opacity:.7; }
       100%{ transform:translate(-50%,-50%) scale(0); opacity:0; }
     }
 
-    .efeitoTela{
-      position:absolute; top:0; left:0; width:100vw; height:100vh;
-      pointer-events:none; opacity:0; transition:opacity .4s ease; z-index:1;
-    }
+    .efeitoTela{ position:fixed; inset:0; pointer-events:none; opacity:0; transition:opacity .4s ease; z-index:1; }
     .efeitoTela.ativo{ opacity:1; }
-    .efeitoTela.chuva{
-      background-image:url('chuva.png'); background-size:cover; background-repeat:repeat;
-      animation: chuvaAnim 6s linear infinite;
-    }
+    .efeitoTela.chuva{ background-image:url('chuva.png'); background-size:cover; background-repeat:repeat; animation: chuvaAnim 6s linear infinite; }
     @keyframes chuvaAnim{ 0%{background-position:0 0;} 100%{background-position:0 100%;} }
+
+    @media (max-width: 480px){ .container{ width:94vw; } .top-buttons{ left:8px; top:8px; flex-direction:row; } }
+    @media (max-width: 360px){ .logo{ width:150px; } }
   </style>
 </head>
 <body>
+  <!-- Efeitos -->
   <img src="fogos.png" id="explosaoFogos" alt="Fogos" />
   <div id="efeitoTela" class="efeitoTela"></div>
 
+  <!-- Botões utilitários -->
   <div class="top-buttons">
-    <button id="btnDownload" class="btn" title="Baixar participantes">⬇</button>
-    <button id="btnLimpar" class="btn" title="Limpar dados">✖</button>
+    <button id="btnDownload" class="btn" title="Baixar CSV">⬇</button>
+    <button id="btnLimpar" class="btn" title="Limpar dados locais">✖</button>
   </div>
 
+  <!-- Card -->
   <div class="container">
     <img src="LOGO GARBO_Prancheta 1.png" alt="Grupo Garbo" class="logo" />
     <h1>Quiz Interativo</h1>
 
+    <!-- Form -->
     <div id="formIdentificacao">
       <div class="input-group"><label>Nome:</label><input type="text" id="nome" required></div>
       <div class="input-group"><label>Setor:</label><input type="text" id="setor" required></div>
@@ -117,6 +155,7 @@
       <button id="btnIniciar" class="btn">Iniciar Quiz</button>
     </div>
 
+    <!-- Pergunta -->
     <div id="telaPergunta" style="display:none;">
       <div id="perguntaTexto"></div>
       <ul id="optionsList" class="options"></ul>
@@ -126,9 +165,10 @@
   </div>
 
   <script>
-    // =======================
-    // 1) PERGUNTAS EMBUTIDAS
-    // =======================
+    /* ====== URL do seu Web App (Apps Script) ====== */
+    const SHEETS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwIPX-KLKOzp7mUkOy59N2vxozzGGuAb5EKGRa-kOBbzTbwR9PJvq79WQRUuPLBHEH17Q/exec';
+
+    /* ====== Perguntas embutidas ====== */
     const perguntas = [
       { p:"Em que ano foi fundada a marca O Boticário?", A:"1972", B:"1977", C:"1980", D:"1984", correta:"B" },
       { p:"Qual é o slogan atual do O Boticário?", A:"Beleza que encanta", B:"O Boticário, onde tem amor tem beleza", C:"Viva sua beleza", D:"Beleza para todos", correta:"B" },
@@ -160,9 +200,7 @@
       { p:"Qual é o propósito central do IAF no Grupo Boticário?", A:"Ser apenas um sistema de acompanhamento de vendas", B:"Impulsionar performance, cultura de excelência e sustentabilidade do negócio", C:"Substituir totalmente o papel dos líderes na gestão das equipes", D:"Não faz diferença nas metas.", correta:"B" }
     ];
 
-    // =======================
-    // 2) LÓGICA / UI
-    // =======================
+    /* ====== Estado/UI ====== */
     let dadosPessoa = {};
     let perguntaAtual = null;
 
@@ -195,13 +233,12 @@
         .map(L => ({ L, txt: pergunta[L] }))
         .filter(it => it.txt && String(it.txt).trim() !== '')
         .sort(() => Math.random() - 0.5);
-
-      const rotulos = ['A','B','C','D']; // rótulos visíveis fixos
+      const rotulos = ['A','B','C','D'];
       optionsList.innerHTML = '';
       itens.forEach((it, idx) => {
         const li = document.createElement('li');
         li.textContent = `${rotulos[idx]}) ${it.txt}`;
-        li.dataset.letra = it.L; // letra ORIGINAL para conferência
+        li.dataset.letra = it.L;          // letra ORIGINAL para checagem
         li.addEventListener('click', onOptionClick);
         optionsList.appendChild(li);
       });
@@ -240,52 +277,77 @@
     function ativaEfeito(tipo) {
       if (tipo === 'fogos') {
         fogos.classList.add('ativo');
-        setTimeout(() => fogos.classList.remove('ativo'), 6000);
+        setTimeout(() => fogos.classList.remove('ativo'), 3500);
       } else {
         efeitoTela.className = 'efeitoTela chuva ativo';
         setTimeout(() => efeitoTela.classList.remove('ativo'), 6000);
       }
     }
 
-    function registraResultado(marcada, correta, acertou) {
-      const agora = new Date();
-      const registro = {
-        Nome: dadosPessoa.nome,
-        Setor: dadosPessoa.setor,
-        Cidade: dadosPessoa.cidade,
-        Pergunta: perguntaAtual.p,
-        'Alternativa Correta': correta,
-        'Alternativa Marcada': marcada,
-        Resultado: acertou ? 'Acertou' : 'Errou',
-        Data: agora.toLocaleDateString(),
-        Hora: agora.toLocaleTimeString()
-      };
-      const registros = JSON.parse(localStorage.getItem('respostasQuiz') || '[]');
-      registros.push(registro);
-      localStorage.setItem('respostasQuiz', JSON.stringify(registros));
-    }
+    /* ====== Envia para o Google Sheets + backup local ====== */
+async function registraResultado(marcada, correta, acertou) {
+  const agora = new Date();
+  const registro = {
+    Nome: dadosPessoa.nome,
+    Setor: dadosPessoa.setor,
+    Cidade: dadosPessoa.cidade,
+    Pergunta: perguntaAtual.p,
+    'Alternativa Correta': correta,
+    'Alternativa Marcada': marcada,
+    Resultado: acertou ? 'Acertou' : 'Errou',
+    Data: agora.toLocaleDateString(),
+    Hora: agora.toLocaleTimeString()
+  };
 
+  // 1) Backup local
+  const registros = JSON.parse(localStorage.getItem('respostasQuiz') || '[]');
+  registros.push(registro);
+  localStorage.setItem('respostasQuiz', JSON.stringify(registros));
+
+  // 2) Tenta enviar com sendBeacon (não sofre CORS)
+  try {
+    const payload = new Blob([JSON.stringify(registro)], { type: 'text/plain' });
+    const ok = navigator.sendBeacon(SHEETS_WEBAPP_URL, payload);
+    if (ok) {
+      console.log('✔ Enviado ao Sheets via sendBeacon');
+      return;
+    }
+  } catch (e) {
+    console.warn('sendBeacon falhou, tentando fallback...', e);
+  }
+
+  // 3) Fallback via GET com querystring (sempre passa)
+  try {
+    const qs = new URLSearchParams();
+    Object.entries(registro).forEach(([k,v]) => qs.append(k, v));
+    // não precisamos ler a resposta
+    fetch(`${SHEETS_WEBAPP_URL}?${qs.toString()}`, { method: 'GET', mode: 'no-cors' });
+    console.log('✔ Enviado ao Sheets via GET fallback');
+  } catch (e) {
+    console.error('✖ Falha total ao enviar', e);
+  }
+}
+
+
+
+    /* ====== Utilidades: baixar CSV local / limpar ====== */
     document.getElementById('btnDownload').addEventListener('click', () => {
       const registros = JSON.parse(localStorage.getItem('respostasQuiz') || '[]');
-      if (!registros.length) return alert('Nenhum participante registrado.');
-      // download CSV simples (sem depender de bibliotecas)
+      if (!registros.length) return alert('Nenhum participante registrado localmente.');
       const cabe = Object.keys(registros[0]);
       const linhas = [cabe.join(';')].concat(
         registros.map(r => cabe.map(k => `"${String(r[k]).replaceAll('"','""')}"`).join(';'))
       );
-      const csv = '\uFEFF' + linhas.join('\n'); // BOM p/ Excel
+      const csv = '\uFEFF' + linhas.join('\n');
       const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'quiz-participantes.csv';
-      a.click();
-      URL.revokeObjectURL(a.href);
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = 'quiz-participantes.csv'; a.click(); URL.revokeObjectURL(a.href);
     });
 
     document.getElementById('btnLimpar').addEventListener('click', () => {
-      if (!confirm('Tem certeza que deseja apagar todos os dados?')) return;
+      if (!confirm('Tem certeza que deseja apagar os dados locais?')) return;
       localStorage.removeItem('respostasQuiz');
-      alert('Dados apagados com sucesso.');
+      alert('Dados locais apagados.');
     });
 
     btnVoltar.addEventListener('click', () => window.location.reload());
