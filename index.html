@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quiz Grupo Garbo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width:100vw; height:100vh;
+      font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:#fff;
+      background: linear-gradient(135deg, #000 0%, #9bd438 60%, #1e40ff 100%);
+    }
+    body { display:flex; align-items:center; justify-content:center; overflow:hidden; }
+
+    .container{
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(8px);
+      padding: 35px;
+      border-radius: 18px;
+      width: 90vw; max-width: 650px;
+      display:flex; flex-direction:column; align-items:center;
+      position:relative; z-index:2;
+      box-shadow: 0 0 25px rgba(155,212,56,0.35);
+    }
+
+    .logo{
+      width: 260px;
+      margin-bottom: 16px;
+      filter: drop-shadow(0 0 10px rgba(30,64,255,0.7));
+      display:block;
+    }
+
+    h1{
+      text-align:center;
+      font-size: 1.9em;
+      margin-bottom: 22px;
+      background: linear-gradient(90deg, #9bd438, #1e40ff);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      text-transform: uppercase; letter-spacing: 1.5px;
+    }
+
+    .input-group{ margin-bottom:12px; width:100%; }
+    .input-group label{ display:block; margin-bottom:6px; font-size:1.02em; opacity:.9; }
+    .input-group input{
+      width:100%; padding:10px; border-radius:10px;
+      border:2px solid #1e40ff;
+      background:#0d0d0d; color:#fff; font-size:1.02em;
+    }
+
+    .btn{
+      padding:14px; font-size:1.12em; font-weight:600;
+      border:none; border-radius:10px; width:100%;
+      background: linear-gradient(90deg, #9bd438, #1e40ff);
+      color:#fff; cursor:pointer; margin-top:18px; letter-spacing:1px;
+      transition:.25s ease; text-transform: uppercase;
+    }
+    .btn:hover{ background: linear-gradient(90deg, #1e40ff, #9bd438); transform: scale(1.04); }
+
+    #perguntaTexto{ font-size:1.28em; margin-bottom:20px; text-align:center; }
+
+    .options{ list-style:none; padding:0; width:100%; }
+    .options li{
+      margin:10px 0; padding:14px; border-radius:10px; cursor:pointer;
+      background: rgba(255,255,255,0.06);
+      border:2px solid #1e40ff;
+      transition:.25s ease; font-size:1.06em;
+    }
+    .options li:hover{ background: rgba(30,64,255,0.18); }
+    .options li.correct{ background: rgba(0,255,0,0.25); border-color:#00ff7f; }
+    .options li.wrong{ background: rgba(255,0,0,0.25); border-color:#ff4747; }
+
+    #msgResultado{ margin-top:20px; font-size:1.18em; font-weight:700; text-align:center; }
+    .top-buttons{ position:absolute; top:10px; right:10px; display:flex; gap:10px; z-index:5; width:140px; }
+
+    #explosaoFogos{
+      position:absolute; top:50%; left:50%;
+      transform: translate(-50%,-50%) scale(0); opacity:0; pointer-events:none;
+      width:300px; height:300px; z-index:9;
+    }
+    #explosaoFogos.ativo{ animation: explode 6s ease-out forwards; }
+    @keyframes explode{
+      0%{ transform:translate(-50%,-50%) scale(.2); opacity:0; }
+      20%{ transform:translate(-50%,-50%) scale(1.2); opacity:1; }
+      100%{ transform:translate(-50%,-50%) scale(0); opacity:0; }
+    }
+
+    .efeitoTela{
+      position:absolute; top:0; left:0; width:100vw; height:100vh;
+      pointer-events:none; opacity:0; transition:opacity .4s ease; z-index:1;
+    }
+    .efeitoTela.ativo{ opacity:1; }
+    .efeitoTela.chuva{
+      background-image:url('chuva.png'); background-size:cover; background-repeat:repeat;
+      animation: chuvaAnim 6s linear infinite;
+    }
+    @keyframes chuvaAnim{ 0%{background-position:0 0;} 100%{background-position:0 100%;} }
+  </style>
+</head>
+<body>
+  <img src="fogos.png" id="explosaoFogos" alt="Fogos" />
+  <div id="efeitoTela" class="efeitoTela"></div>
+
+  <div class="top-buttons">
+    <button id="btnDownload" class="btn" title="Baixar participantes">⬇</button>
+    <button id="btnLimpar" class="btn" title="Limpar dados">✖</button>
+  </div>
+
+  <div class="container">
+    <img src="LOGO GARBO_Prancheta 1.png" alt="Grupo Garbo" class="logo" />
+    <h1>Quiz Interativo</h1>
+
+    <div id="formIdentificacao">
+      <div class="input-group"><label>Nome:</label><input type="text" id="nome" required></div>
+      <div class="input-group"><label>Setor:</label><input type="text" id="setor" required></div>
+      <div class="input-group"><label>Cidade:</label><input type="text" id="cidade" required></div>
+      <button id="btnIniciar" class="btn">Iniciar Quiz</button>
+    </div>
+
+    <div id="telaPergunta" style="display:none;">
+      <div id="perguntaTexto"></div>
+      <ul id="optionsList" class="options"></ul>
+      <div id="msgResultado"></div>
+      <button id="btnVoltar" class="btn" style="display:none;">Voltar</button>
+    </div>
+  </div>
+
+  <script>
+    // =======================
+    // 1) PERGUNTAS EMBUTIDAS
+    // =======================
+    const perguntas = [
+      { p:"Em que ano foi fundada a marca O Boticário?", A:"1972", B:"1977", C:"1980", D:"1984", correta:"B" },
+      { p:"Qual é o slogan atual do O Boticário?", A:"Beleza que encanta", B:"O Boticário, onde tem amor tem beleza", C:"Viva sua beleza", D:"Beleza para todos", correta:"B" },
+      { p:"Qual foi o primeiro produto lançado pelo O Boticário?", A:"Perfume Malbec", B:"Creme Lily", C:"Álcool de Alfazema", D:"Colônia Floratta", correta:"C" },
+      { p:"O Boticário está presente em quantos países atualmente?", A:"5", B:"10", C:"15", D:"Mais de 15", correta:"D" },
+      { p:"Além de O Boticário, quais outras marcas fazem parte do Grupo Boticário?", A:"Avon, Natura, Jequiti", B:"Eudora, Quem Disse Berenice?, Vult, O.U.i, Beleza na Web", C:"Mary Kay, Eudora, Nivea", D:"Quem Disse Berenice?, Avon, Vult", correta:"B" },
+      { p:"Quantos pontos de venda o Grupo Garbo possui atualmente?", A:"12", B:"14", C:"15", D:"20", correta:"C" },
+      { p:"Qual é o grito de guerra do Grupo Garbo?", A:"Vamos juntos crescer, Grupo Garbo vai vencer!", B:"Respire Resultado e faça acontecer, aqui é Grupo Garbo e a nossa meta é crescer", C:"Respire IAF e faça acontecer, aqui é Grupo Garbo e a nossa meta é crescer", D:"Somos Garbo, somos Diamante", correta:"C" },
+      { p:"O que precisamos para alcançar o título de Diamante no Grupo Garbo?", A:"Apenas vender mais produtos", B:"Garantir alta performance em indicadores (IAF), engajamento da equipe e excelência nas lojas", C:"Abrir novas lojas", D:"Focar apenas em promoções", correta:"B" },
+      { p:"Qual dessas iniciativas envolve todos os colaboradores do Grupo Garbo?", A:"REMAR – Reunião Mensal de Avaliação de Resultados", B:"Comitê de Gente e Cultura", C:"PCOF – Plano de Controle Operacional Financeiro", D:"Conselho de Liderança", correta:"B" },
+      { p:"Qual título o Grupo Garbo busca conquistar até o final do ano?", A:"Ouro", B:"Prata", C:"Diamante", D:"Rubi", correta:"C" },
+      { p:"O que é o Grupo Garbo dentro da rede do Grupo Boticário?", A:"Líder de franquia", B:"Contratado", C:"Representante", D:"Franqueado", correta:"D" },
+      { p:"O que significa a sigla CP?", A:"Código principal", B:"Central principal", C:"Central de prontidão", D:"Código pai", correta:"D" },
+      { p:"Quais são as principais marcas do Grupo Boticário que comercializamos?", A:"Vult, O.U.i, Beleza na Web", B:"Truss, O Boticário, Eudora e QDB", C:"Vult, O Boticário, Eudora e Oui", D:"O Boticário, Eudora, Oui e QDB", correta:"D" },
+      { p:"Quais são as categorias de revendedores Pedras Preciosas (VIPs)?", A:"Diamante e Esmeralda", B:"Platina, Esmeralda e Diamante", C:"Ouro, Prata e Rubi", D:"Rubi, Esmeralda e Diamante", correta:"D" },
+      { p:"Onde fica o ponto de apoio físico para os revendedores atendidos pelo Grupo Garbo?", A:"Urbano Santos, Chapadinha, Itapecuru, Santa Rita, Barreirinhas", B:"Rosário, Codo, Santa Rita, Vargem Grande", C:"Brejo, Tutoia, Chapadinha, Itapecuru, Santa Rita, Barreirinhas, Codo, Santa Rita, Vargem", D:"Tutoia, Chapadinha, Itapecuru, Santa Rita, Barreirinhas, Codo, Santa Rita, Vargem Grande", correta:"D" },
+      { p:"O que significa IAF?", A:"Instrumento de Aceleração do Franqueado", B:"Indicadores de Alta Performance", C:"Instrumento de Aceleração do Futuro", D:"Indicadores para Franqueados", correta:"C" },
+      { p:"O que significa VD dentro da operação do Grupo Boticário?", A:"Venda para revendedores", B:"Revenda para revendedora", C:"Venda domiciliar", D:"Venda direta", correta:"D" },
+      { p:"Qual é a importância da precificação correta nas vitrines e kits para a auditoria e para o cliente final?", A:"Só importa em períodos de promoção", B:"Não influencia na experiência do cliente", C:"Fundamental para garantir confiança para o cliente, reforçando a credibilidade da marca; em auditoria são indicadores de padronização, organização e conformidade", D:"Desnecessária o cliente pode usar o aplicativo.", correta:"C" },
+      { p:"Qual é o principal objetivo do Instrumento de Aceleração do Futuro (IAF)?", A:"Avaliar apenas o faturamento dos revendedores", B:"Padronizar o atendimento e acelerar resultados da operação", C:"Organizar somente os estoques da loja", D:"Controlar horários de entrada e saída dos colaboradores", correta:"B" },
+      { p:"Por que é importante manter o ponto de apoio físico bem estruturado para os revendedores?", A:"Apenas para guardar produtos sem organização", B:"Para facilitar o atendimento, treinamentos e retirada de pedidos pelos revendedores", C:"Serve só como espaço de confraternização", D:"Não tem importância, os revendedores não usam", correta:"B" },
+      { p:"Qual é o papel do gerente de loja?", A:"Somente vender produtos", B:"Organizar o estoque sem liderança", C:"Liderar a equipe, acompanhar indicadores, garantir padronização da franquia e motivar o time", D:"Fazer limpeza da loja apenas", correta:"C" },
+      { p:"Como se preparar para auditoria surpresa?", A:"Fazer faxina apenas na véspera", B:"Mantendo a rotina organizada todos os dias, como se a auditoria fosse acontecer a qualquer momento", C:"Arrumar só o estoque", D:"Esperar a auditoria para então organizar a loja", correta:"B" },
+      { p:"Como o gerente atua na rotina com as consultoras?", A:"Faz reuniões de alinhamento, acompanha metas individuais e dá feedbacks para desenvolvimento", B:"Somente entrega produtos", C:"Observa a equipe sem dar retorno", D:"Aplica advertências diariamente", correta:"A" },
+      { p:"Qual é a primeira atividade ao abrir a loja?", A:"Atender clientes imediatamente", B:"Realizar checklist de abertura: limpeza, planograma, conferência de caixa", C:"Conferir metas do mês anterior", D:"Organizar apenas a vitrine", correta:"B" },
+      { p:"O que a auditoria verifica na loja?", A:"Somente os produtos da vitrine", B:"Apenas o caixa e estoque", C:"Planograma, vitrine, organização, atendimento, limpeza, estoque e cumprimento de padrões operacionais", D:"Atendimento aos clientes apenas", correta:"C" },
+      { p:"Por que seguir o planograma é obrigatório?", A:"Porque ele deixa a loja mais bonita", B:"Porque orienta a exposição estratégica dos produtos e facilita a experiência do cliente", C:"Porque o gerente quer", D:"Porque é opcional, depende do dia", correta:"B" },
+      { p:"O que é um indicador 'ofensor' no IAF?", A:"Indicador que já está superando a meta", B:"Indicador que está abaixo da meta e prejudica a performance", C:"Indicador que não tem relação com os resultados da equipe", D:"Indicador de meta batida", correta:"B" },
+      { p:"Qual é o propósito central do IAF no Grupo Boticário?", A:"Ser apenas um sistema de acompanhamento de vendas", B:"Impulsionar performance, cultura de excelência e sustentabilidade do negócio", C:"Substituir totalmente o papel dos líderes na gestão das equipes", D:"Não faz diferença nas metas.", correta:"B" }
+    ];
+
+    // =======================
+    // 2) LÓGICA / UI
+    // =======================
+    let dadosPessoa = {};
+    let perguntaAtual = null;
+
+    const efeitoTela = document.getElementById('efeitoTela');
+    const fogos = document.getElementById('explosaoFogos');
+    const optionsList = document.getElementById('optionsList');
+    const msgResultado = document.getElementById('msgResultado');
+    const btnVoltar = document.getElementById('btnVoltar');
+
+    const nomeInput = document.getElementById('nome');
+    const setorInput = document.getElementById('setor');
+    const cidadeInput = document.getElementById('cidade');
+    const formIdentificacao = document.getElementById('formIdentificacao');
+    const telaPergunta = document.getElementById('telaPergunta');
+
+    document.getElementById('btnIniciar').addEventListener('click', () => {
+      const nome = nomeInput.value.trim();
+      const setor = setorInput.value.trim();
+      const cidade = cidadeInput.value.trim();
+      if (!nome || !setor || !cidade) return alert('Preencha todos os campos.');
+      dadosPessoa = { nome, setor, cidade };
+      formIdentificacao.style.display = 'none';
+      telaPergunta.style.display = 'block';
+      sorteiaPergunta();
+    });
+
+    function montarAlternativas(pergunta) {
+      const orig = ['A','B','C','D'];
+      const itens = orig
+        .map(L => ({ L, txt: pergunta[L] }))
+        .filter(it => it.txt && String(it.txt).trim() !== '')
+        .sort(() => Math.random() - 0.5);
+
+      const rotulos = ['A','B','C','D']; // rótulos visíveis fixos
+      optionsList.innerHTML = '';
+      itens.forEach((it, idx) => {
+        const li = document.createElement('li');
+        li.textContent = `${rotulos[idx]}) ${it.txt}`;
+        li.dataset.letra = it.L; // letra ORIGINAL para conferência
+        li.addEventListener('click', onOptionClick);
+        optionsList.appendChild(li);
+      });
+    }
+
+    function sorteiaPergunta() {
+      perguntaAtual = perguntas[Math.floor(Math.random() * perguntas.length)];
+      document.getElementById('perguntaTexto').textContent = perguntaAtual.p;
+      montarAlternativas(perguntaAtual);
+    }
+
+    function onOptionClick(e) {
+      const selecionada = e.currentTarget.dataset.letra;
+      const correta = (perguntaAtual.correta || '').toUpperCase();
+      const acertou = selecionada === correta;
+
+      if (acertou) e.currentTarget.classList.add('correct');
+      else e.currentTarget.classList.add('wrong');
+
+      if (!acertou) {
+        const corretaLi = [...optionsList.children].find(li => li.dataset.letra === correta);
+        if (corretaLi) corretaLi.classList.add('correct');
+      }
+
+      msgResultado.textContent = acertou
+        ? `Parabéns, ${dadosPessoa.nome}! Você pode rodar a roleta.`
+        : `Não foi dessa vez, ${dadosPessoa.nome}.`;
+
+      [...optionsList.children].forEach(li => li.removeEventListener('click', onOptionClick));
+      btnVoltar.style.display = 'block';
+
+      registraResultado(selecionada, correta, acertou);
+      ativaEfeito(acertou ? 'fogos' : 'chuva');
+    }
+
+    function ativaEfeito(tipo) {
+      if (tipo === 'fogos') {
+        fogos.classList.add('ativo');
+        setTimeout(() => fogos.classList.remove('ativo'), 6000);
+      } else {
+        efeitoTela.className = 'efeitoTela chuva ativo';
+        setTimeout(() => efeitoTela.classList.remove('ativo'), 6000);
+      }
+    }
+
+    function registraResultado(marcada, correta, acertou) {
+      const agora = new Date();
+      const registro = {
+        Nome: dadosPessoa.nome,
+        Setor: dadosPessoa.setor,
+        Cidade: dadosPessoa.cidade,
+        Pergunta: perguntaAtual.p,
+        'Alternativa Correta': correta,
+        'Alternativa Marcada': marcada,
+        Resultado: acertou ? 'Acertou' : 'Errou',
+        Data: agora.toLocaleDateString(),
+        Hora: agora.toLocaleTimeString()
+      };
+      const registros = JSON.parse(localStorage.getItem('respostasQuiz') || '[]');
+      registros.push(registro);
+      localStorage.setItem('respostasQuiz', JSON.stringify(registros));
+    }
+
+    document.getElementById('btnDownload').addEventListener('click', () => {
+      const registros = JSON.parse(localStorage.getItem('respostasQuiz') || '[]');
+      if (!registros.length) return alert('Nenhum participante registrado.');
+      // download CSV simples (sem depender de bibliotecas)
+      const cabe = Object.keys(registros[0]);
+      const linhas = [cabe.join(';')].concat(
+        registros.map(r => cabe.map(k => `"${String(r[k]).replaceAll('"','""')}"`).join(';'))
+      );
+      const csv = '\uFEFF' + linhas.join('\n'); // BOM p/ Excel
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'quiz-participantes.csv';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    document.getElementById('btnLimpar').addEventListener('click', () => {
+      if (!confirm('Tem certeza que deseja apagar todos os dados?')) return;
+      localStorage.removeItem('respostasQuiz');
+      alert('Dados apagados com sucesso.');
+    });
+
+    btnVoltar.addEventListener('click', () => window.location.reload());
+  </script>
+</body>
+</html>
