@@ -57,19 +57,43 @@
       display:flex; flex-direction:column; text-align:left;
     }
     .input-group label{ margin-bottom:6px; font-size:clamp(.9rem,1.8vw,1rem); opacity:.85; }
-    .input-group input{
-      width:100%; padding: clamp(12px,2vw,14px);
-      border-radius:12px; font-size:clamp(.95rem,1.8vw,1rem); color:#fff;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.2);
-      box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
-      outline:none; transition: all .3s ease;
-    }
+.input-group input,
+.input-group select {
+  width:100%;
+  padding: clamp(12px,2vw,14px);
+  border-radius:12px;
+  font-size:clamp(.95rem,1.8vw,1rem);
+  color:#fff;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+  outline:none;
+  transition: all .3s ease;
+  appearance: none; /* remove o estilo nativo */
+}
+
+.input-group select:focus {
+  border-color: var(--verde);
+  box-shadow: 0 0 12px rgba(155,212,56,0.4), inset 0 0 6px rgba(155,212,56,0.2);
+  background: rgba(255,255,255,0.12);
+}
+
     .input-group input:focus{
       border-color: var(--verde);
       box-shadow: 0 0 12px rgba(155,212,56,0.4), inset 0 0 6px rgba(155,212,56,0.2);
       background: rgba(255,255,255,0.12);
     }
+  
+    .input-group select {
+  color: #000; /* letra preta no campo */
+  background: rgba(255,255,255,0.9); /* fundo claro */
+}
+
+.input-group select option {
+  color: #000; /* letra preta nas opções */
+  background: #fff; /* fundo branco nas opções */
+}
+
 
     .btn{
       width:95%; max-width:800px; margin: clamp(10px,2.5vw,16px) auto 0;
@@ -150,8 +174,41 @@
     <!-- Form -->
     <div id="formIdentificacao">
       <div class="input-group"><label>Nome:</label><input type="text" id="nome" required></div>
-      <div class="input-group"><label>Setor:</label><input type="text" id="setor" required></div>
-      <div class="input-group"><label>Cidade:</label><input type="text" id="cidade" required></div>
+<div class="input-group">
+  <label>Setor:</label>
+  <select id="setor" required>
+    <option value="" disabled selected>Selecione o setor</option>
+    <option value="Financeiro">Financeiro</option>
+    <option value="FVG">FVG</option>
+    <option value="GIPT">GIPT</option>
+    <option value="Loja">Loja</option>
+    <option value="Logistica">Logística</option>
+    <option value="RH">RH</option>
+    <option value="Suprimentos">Suprimentos</option>
+    <option value="VD">VD</option>
+  </select>
+</div>
+
+<div class="input-group">
+  <label>Cidade:</label>
+  <select id="cidade" required>
+    <option value="" disabled selected>Selecione a cidade</option>
+    <option value="BARREIRINHAS">Barreirinhas</option>
+    <option value="CHAPADINHA">Chapadinha</option>
+    <option value="CODÓ">Codó</option>
+    <option value="COROATÁ">Coroatá</option>
+    <option value="ITAPECURU">Itapecuru</option>
+    <option value="MIRANDA">Miranda</option>
+    <option value="PERITORÓ">Peritoró</option>
+    <option value="ROSÁRIO">Rosário</option>
+    <option value="SANTA RITA">Santa Rita</option>
+    <option value="TUTÓIA">Tutóia</option>
+    <option value="URBANO SANTOS">Urbano Santos</option>
+    <option value="VARGEM GRANDE">Vargem Grande</option>
+  </select>
+</div>
+
+
       <button id="btnIniciar" class="btn">Iniciar Quiz</button>
     </div>
 
